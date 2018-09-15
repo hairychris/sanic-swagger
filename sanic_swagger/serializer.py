@@ -1,3 +1,4 @@
+import sys
 from datetime import date, datetime
 from enum import EnumMeta
 from functools import singledispatch
@@ -5,7 +6,6 @@ from typing import (
     Any,
     Collection,
     Dict,
-    GenericMeta,
     Iterable,
     List,
     Mapping,
@@ -18,6 +18,12 @@ import attr
 
 from .doc import ModelMeta
 from .options import metadata_aliases
+
+# Check if we are running on Python 3.7
+if sys.version_info[:3] >= (3, 7, 0):
+    GenericMeta = type
+else:
+    from typing import GenericMeta  # noqa
 
 required_fields = {}
 object_definitions = {}
@@ -55,7 +61,7 @@ def _camel_case(snake_str):
 
 def _raise_other_encouraged_type_exception(simple_type, *encouraged_type):
     if len(encouraged_type) > 1:
-        encouraged = ', '.join([str(t.__name__) for t in encouraged_type])
+        encouraged = ', '.join([str(t._name) for t in encouraged_type])
     else:
         encouraged = str(encouraged_type[0])
     raise TypeError(
@@ -121,14 +127,14 @@ def _serialize_enum_meta(type_, model):
 
 @_serialize_type.register(GenericMeta)  # for typing generics
 def _serialize_generic_meta(type_, model):
-    if type_.__base__ in (List, Set, Sequence, Collection, Iterable):
+    if type_.__origin__ in (list, set, Sequence, Collection, Iterable):
         output = {'type': 'array'}
         if len(type_.__args__):
             output.update(
                 {'items': {**_serialize_type(type_.__args__[0], model)}}
             )
         return output
-    elif type_.__base__ in (Dict, Mapping):
+    elif type_.__origin__ in (dict, Mapping):
         output = {'type': 'object'}
         if type_.__args__:
             output.update(
