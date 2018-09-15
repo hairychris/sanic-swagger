@@ -63,7 +63,7 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     keywords='sanic swagger openapi attrs cattrs',
-    python_requires='==3.6.*',
+    python_requires='>=3.6.*',
     cmdclass={
         'verify': VerifyVersionCommand,
     }
