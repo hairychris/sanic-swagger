@@ -147,7 +147,7 @@ def _serialize_generic_meta(type_, model):
             )
         return output
     else:
-        raise TypeError('This type is not supported')
+        raise TypeError('{} is not supported'.format(type_))
 
 
 @_serialize_type.register(ModelMeta)  # for recursive types
@@ -194,4 +194,4 @@ def _serialize_raw_type_information(type_, model):
     else:
         if attr.has(type_):  # for recursive types, just like ModelMeta
             return _create_definition(_serialize_custom_objects)(type_, model)
-        raise TypeError('This type is not supported')
+        raise TypeError('{} is not supported'.format(type_))
