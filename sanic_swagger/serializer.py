@@ -21,7 +21,8 @@ from .options import metadata_aliases
 
 # Check if we are running on Python 3.7
 if sys.version_info[:3] >= (3, 7, 0):
-    GenericMeta = type
+    from typing import Generic
+    GenericMeta = Generic
 else:
     from typing import GenericMeta  # noqa
 
@@ -115,7 +116,7 @@ def _serialize_type(type_, model):
                 ]
             }
     else:
-        raise TypeError('{} is not supported'.format(type_))
+        print('_serialize_type({},{}) is not supported'.format(type_, model))
 
 
 @_serialize_type.register(EnumMeta)  # for enums
