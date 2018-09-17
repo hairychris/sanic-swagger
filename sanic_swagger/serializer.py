@@ -2,8 +2,8 @@ import sys
 from datetime import date, datetime
 from enum import EnumMeta
 from functools import singledispatch
+from pprint import pprint
 from typing import (
-    Any,
     Collection,
     Dict,
     Iterable,
@@ -96,7 +96,12 @@ def _merge_metadata(data, field, model):
 
 @singledispatch
 def _serialize_type(type_, model):
-    if type_ == Any:
+    print("_serialize_type(type_, model)")
+    print("type_ = {}".format(type_))
+    pprint(vars(type_))
+    print("model = {}".format(model))
+    
+    if type_._name == 'Any':
         return {'type': 'object'}  # TODO is this the best way to deal with?
     elif type_.__origin__ == Union:
         if len(type_.__args__) == 2 and type(None) == type_.__args__[1]:
@@ -109,6 +114,8 @@ def _serialize_type(type_, model):
                     _serialize_type(arg, model) for arg in type_.__args__
                 ]
             }
+    else:
+        raise TypeError('{} is not supported'.format(type_))
 
 
 @_serialize_type.register(EnumMeta)  # for enums
@@ -119,6 +126,10 @@ def _serialize_enum_meta(type_, model):
           So its outputs when calling this function are those of the wrapped
           output.
     """
+    print("_serialize_enum_meta(type_, model)")
+    print("type_ = {}".format(type_))
+    pprint(vars(type_))
+    print("model = {}".format(model))
     choices = [e.value for e in type_]
     output = _serialize_type(type(choices[0]), model)
     output.update({'enum': choices})
@@ -127,14 +138,20 @@ def _serialize_enum_meta(type_, model):
 
 @_serialize_type.register(GenericMeta)  # for typing generics
 def _serialize_generic_meta(type_, model):
-    if type_.__origin__ in (list, set, Sequence, Collection, Iterable):
+    print("_serialize_generic_meta(type_, model)")
+    print("type_ = {}".format(type_))
+    pprint(vars(type_))
+    print("model = {}".format(model))
+    if type_._name in ('List', 'Set', 'Sequence', 'Collection', 'Iterable'):
+        print("type_ is an array (or more accurately its _name is)")
         output = {'type': 'array'}
         if len(type_.__args__):
             output.update(
                 {'items': {**_serialize_type(type_.__args__[0], model)}}
             )
         return output
-    elif type_.__origin__ in (dict, Mapping):
+    elif type_._name in ('Dict', 'Mapping'):
+        print("type_ is an object (or more accurately its _name is)")
         output = {'type': 'object'}
         if type_.__args__:
             output.update(
@@ -158,6 +175,10 @@ def _serialize_custom_objects(type_, model):
           So its outputs when calling this function are those of the wrapped
           output.
     """
+    print("_serialize_custom_objects(type_, model)")
+    print("type_ = {}".format(type_))
+    pprint(vars(type_))
+    print("model = {}".format(model))
     output = {
         'type': 'object',
         'properties': {
